@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .stat-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-unit {
+            font-size: 12px;
+            color: #999;
+            margin-left: 5px;
+        }
+        .tier-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .main-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .record {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .record:last-child {
+            border-bottom: none;
+        }
+        .record-info {
+            flex: 1;
+        }
+        .record-tile {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+        .record-energy {
+            text-align: right;
+        }
+        .energy-value {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+        .energy-label {
+            font-size: 11px;
+            color: #999;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .no-data {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>?? {{ username }}'s Dashboard</h1>
+
+    <div class="header-info">
+        <div class="stat-card">
+            <div class="stat-label">Total Energy Generated</div>
+            <div class="stat-value">{{ total_energy_wh }}<span class="stat-unit">Wh</span></div>
+            <div class="tier-badge">{{ tier }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Reward Points Earned</div>
+            <div class="stat-value">{{ reward_points }}<span class="stat-unit">pts</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pressure Given</div>
+            <div class="stat-value">{{ pressure_given }}<span class="stat-unit">PSI</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Ampere</div>
+            <div class="stat-value">{{ ampere }}<span class="stat-unit">A</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Voltage</div>
+            <div class="stat-value">{{ voltage }}<span class="stat-unit">V</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Steps Recorded</div>
+            <div class="stat-value">{{ total_steps }}</div>
+        </div>
+    </div>
+
+    <div class="main-card">
+
+        <div class="section-title">?? Recent Energy Records</div>
+        {% if recent_records %}
+            {% for record in recent_records %}
+            <div class="record">
+                <div class="record-info">
+                    <div class="record-tile">{{ record.tile_name }}</div>
+                    <div class="record-time">{{ record.timestamp }}</div>
+                </div>
+                <div class="record-energy">
+                    <div class="energy-value">{{ record.electricity_wh }} Wh</div>
+                    <div class="energy-label">{{ (record.electricity_wh * 100)|int }} pts</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-data">No energy records yet. Visit an energy tile to start earning!</div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center;">
+        <a href="/" class="button">? Record More Energy</a>
+    </div>
+</div>
+
+</body>
+</html>

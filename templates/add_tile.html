@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Energy Tile - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #ff1493;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ff1493;
+        }
+        
+        .coordinates {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .coordinates input {
+            width: 100%;
+        }
+        
+        .advanced {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .advanced input {
+            width: 100%;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 20, 147, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #ff1493;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .info-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff1493;
+        }
+        
+        .info-box h3 {
+            color: #ff1493;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-box p {
+            color: #666;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 Add Energy Tile</h1>
+            <p>Create a new piezoelectric energy collection point</p>
+        </div>
+        
+        <div class="info-box">
+            <h3>GPS Coordinates Format</h3>
+            <p><strong>Latitude:</strong> -90 to 90 (North is positive)</p>
+            <p><strong>Longitude:</strong> -180 to 180 (East is positive)</p>
+        </div>
+        
+        <form id="tileForm" onsubmit="addTile(event)">
+            <div class="form-group">
+                <label for="tile_name">Tile Name *</label>
+                <input type="text" id="tile_name" name="tile_name" 
+                       placeholder="e.g., Shibuya Crossing" required>
+            </div>
+            
+            <div class="form-group">
+                <label>GPS Coordinates</label>
+                <div class="coordinates">
+                    <div>
+                        <label style="font-size: 12px;">Latitude *</label>
+                        <input type="number" id="latitude" name="latitude" 
+                               step="0.0001" placeholder="35.6595" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px;">Longitude *</label>
+                        <input type="number" id="longitude" name="longitude" 
+                               step="0.0001" placeholder="139.7004" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Detection Settings</label>
+                <div class="advanced">
+                    <div>
+                        <label style="font-size: 12px;">Radius (degrees)</label>
+                        <input type="number" id="radius" name="radius" 
+                               step="0.0001" value="0.001" placeholder="0.001">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px;">Capacity (Wh)</label>
+                        <input type="number" id="capacity" name="capacity" 
+                               step="1" value="1000" placeholder="1000">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit">✅ Add Energy Tile</button>
+        </form>
+        
+        <div id="message"></div>
+        
+        <div class="back-link">
+            <a href="/admin-panel">← Back to Admin Panel</a>
+        </div>
+    </div>
+    
+    <script>
+        async function addTile(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(document.getElementById('tileForm'));
+            
+            try {
+                const response = await fetch('/add-tile', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const messageDiv = document.getElementById('message');
+                
+                if (result.status === 'success') {
+                    messageDiv.innerHTML = `<div class="message success">${result.message}</div>`;
+                    document.getElementById('tileForm').reset();
+                    setTimeout(() => {
+                        window.location.href = '/admin-panel';
+                    }, 2000);
+                } else {
+                    messageDiv.innerHTML = `<div class="message error">${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = 
+                    `<div class="message error">Error adding tile: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

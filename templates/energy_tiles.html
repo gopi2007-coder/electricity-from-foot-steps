@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Energy Tiles Map</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .tile {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+        .tile:last-child {
+            border-bottom: none;
+        }
+        .tile-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .tile-location {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .tile-capacity {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .coordinates {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            border-left: 4px solid #667eea;
+        }
+        .coord-item {
+            margin: 8px 0;
+        }
+        .coord-label {
+            color: #999;
+            font-weight: 600;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            color: #666;
+            font-size: 13px;
+        }
+        .tile {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            margin: 0 -20px;
+            padding: 20px;
+        }
+        .tile:hover {
+            background-color: #f9f9f9;
+            transform: translateX(5px);
+        }
+        .tile.selected {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+        .submit-section {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+        .submit-section.visible {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .submit-button {
+            padding: 14px 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .submit-button:hover {
+            transform: translateY(-2px);
+        }
+        .submit-button:active {
+            transform: translateY(0);
+        }
+        .selected-tile-name {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>??? Energy Tiles Locations</h1>
+
+    <div class="card">
+        <div class="info-box">
+            5 active energy tile locations in Tokyo. Visit these locations to walk on piezoelectric sensors and generate electricity!
+        </div>
+
+        <form id="tileForm">
+            <input type="hidden" id="selectedTileId" name="tile_id" value="">
+            
+            {% for tile in tiles %}
+            <div class="tile" data-tile-id="{{ tile.id }}" data-tile-name="{{ tile.name }}">
+                <div class="tile-info">
+                    <h3>{{ tile.name }}</h3>
+                    <div class="tile-location">?? Energy Tile {{ tile.id }}</div>
+                    <div class="tile-capacity">Capacity: {{ tile.capacity }} Wh</div>
+                </div>
+                <div class="coordinates">
+                    <div class="coord-item">
+                        <span class="coord-label">Latitude:</span> {{ tile.lat }}
+                    </div>
+                    <div class="coord-item">
+                        <span class="coord-label">Longitude:</span> {{ tile.lon }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="submit-section" id="submitSection">
+                <div class="selected-tile-name">Selected: <strong id="selectedTileName"></strong></div>
+                <button type="submit" class="submit-button">✓ Confirm Selection</button>
+            </div>
+        </form>
+    </div>
+
+    <a href="/" class="back-button">? Start Recording Energy</a>
+</div>
+
+<script>
+document.querySelectorAll('.tile').forEach(tile => {
+    tile.addEventListener('click', function() {
+        // Remove selection from all tiles
+        document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
+        
+        // Add selection to clicked tile
+        this.classList.add('selected');
+        
+        // Update hidden input and display
+        const tileId = this.getAttribute('data-tile-id');
+        const tileName = this.getAttribute('data-tile-name');
+        document.getElementById('selectedTileId').value = tileId;
+        document.getElementById('selectedTileName').textContent = tileName;
+        
+        // Show submit section with animation
+        const submitSection = document.getElementById('submitSection');
+        submitSection.classList.add('visible');
+    });
+});
+
+document.getElementById('tileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const selectedTileId = document.getElementById('selectedTileId').value;
+    
+    if (!selectedTileId) {
+        alert('Please select a tile first');
+        return;
+    }
+    
+    // Store selection and redirect or proceed
+    console.log('Selected tile:', selectedTileId);
+    // You can redirect to dashboard or API endpoint here
+    window.location.href = `/dashboard/${selectedTileId}`;
+});
+</script>

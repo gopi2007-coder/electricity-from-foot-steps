@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Energy Leaderboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .user-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 150px 150px;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+        .user-row:last-child {
+            border-bottom: none;
+        }
+        .rank {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+        }
+        .stats {
+            text-align: right;
+        }
+        .stat-item {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .tier {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .back-button:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>?? Global Energy Leaderboard</h1>
+
+    <div class="card">
+        {% for user in leaderboard %}
+        <div class="user-row">
+            <div class="rank {% if user.rank == 1 %}rank-1{% elif user.rank == 2 %}rank-2{% elif user.rank == 3 %}rank-3{% endif %}">
+                {% if user.rank == 1 %}??{% elif user.rank == 2 %}??{% elif user.rank == 3 %}??{% else %}#{{ user.rank }}{% endif %}
+            </div>
+            <div>
+                <div class="user-name">{{ user.username }}</div>
+                <div class="tier">{{ user.tier }}</div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">{{ user.energy_wh }} Wh</div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">{{ user.points }} pts</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <a href="/" class="back-button">? Back to Energy Tiles</a>
+</div>
+
+</body>
+</html>

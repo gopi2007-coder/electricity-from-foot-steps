@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Factor Authentication - Energy Contribution Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .mfa-methods {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .method-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .method-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+        }
+        
+        .method-btn:hover {
+            border-color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .form-group.active {
+            display: block;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #bee5eb;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Verification Required</h1>
+        <p class="subtitle">Two-Factor Authentication</p>
+        
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <div class="mfa-methods">
+            <button class="method-btn active" onclick="switchMethod('email')">📧 Email OTP</button>
+            <button class="method-btn" onclick="switchMethod('totp')">📱 Authenticator</button>
+        </div>
+        
+        <form method="POST" action="/verify-mfa">
+            <input type="hidden" name="user_type" value="{{ user_type }}">
+            <input type="hidden" name="username" value="{{ username }}">
+            <input type="hidden" name="mfa_method" id="mfa_method" value="email">
+            
+            <!-- Email OTP Method -->
+            <div class="form-group active" id="email-method">
+                <div class="info">
+                    Check your email for a 6-digit code. We've sent it to the email associated with your account.
+                </div>
+                <label for="email_otp">Enter OTP Code</label>
+                <input type="text" id="email_otp" name="email_otp" maxlength="6" placeholder="000000">
+            </div>
+            
+            <!-- TOTP Method -->
+            <div class="form-group" id="totp-method">
+                <div class="info">
+                    Enter the 6-digit code from your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)
+                </div>
+                <label for="totp_code">Enter TOTP Code</label>
+                <input type="text" id="totp_code" name="totp_code" maxlength="6" placeholder="000000">
+            </div>
+            
+            <button type="submit">Verify & Login</button>
+        </form>
+        
+        <div class="links">
+            <a href="/">← Back</a>
+        </div>
+    </div>
+    
+    <script>
+        function switchMethod(method) {
+            // Update buttons
+            document.querySelectorAll('.method-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update form groups
+            document.querySelectorAll('.form-group').forEach(group => {
+                group.classList.remove('active');
+            });
+            
+            if (method === 'email') {
+                document.getElementById('email-method').classList.add('active');
+                document.getElementById('mfa_method').value = 'email';
+            } else {
+                document.getElementById('totp-method').classList.add('active');
+                document.getElementById('mfa_method').value = 'totp';
+            }
+        }
+        
+        // Auto-focus on input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('email_otp').focus();
+        });
+    </script>
+</body>
+</html>
