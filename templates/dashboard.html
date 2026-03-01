@@ -131,13 +131,31 @@
 <body>
 
 <div class="container">
-    <h1>?? {{ username }}'s Dashboard</h1>
+    <h1>{{ username }}'s Dashboard</h1>
 
     <div class="header-info">
         <div class="stat-card">
             <div class="stat-label">Total Energy Generated</div>
             <div class="stat-value">{{ total_energy_wh }}<span class="stat-unit">Wh</span></div>
             <div class="tier-badge">{{ tier }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value">{{ active_users_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Tiles</div>
+            <div class="stat-value">{{ active_tiles_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Today's Energy</div>
+            <div class="stat-value">{{ todays_energy_wh }}<span class="stat-unit">Wh</span></div>
+            <div class="stat-label" style="margin-top:8px;">Today's Reward Points</div>
+            <div class="stat-value">{{ todays_reward_points }}<span class="stat-unit">pts</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Monthly Energy</div>
+            <div class="stat-value">{{ monthly_energy_wh }}<span class="stat-unit">Wh</span></div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Reward Points Earned</div>
@@ -152,8 +170,16 @@
             <div class="stat-value">{{ ampere }}<span class="stat-unit">A</span></div>
         </div>
         <div class="stat-card">
+            <div class="stat-label">Monthly Ampere</div>
+            <div class="stat-value">{{ monthly_ampere }}<span class="stat-unit">A</span></div>
+        </div>
+        <div class="stat-card">
             <div class="stat-label">Voltage</div>
             <div class="stat-value">{{ voltage }}<span class="stat-unit">V</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Monthly Voltage</div>
+            <div class="stat-value">{{ monthly_voltage }}<span class="stat-unit">V</span></div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Total Steps Recorded</div>
@@ -163,7 +189,7 @@
 
     <div class="main-card">
 
-        <div class="section-title">?? Recent Energy Records</div>
+        <div class="section-title">Recent Energy Records</div>
         {% if recent_records %}
             {% for record in recent_records %}
             <div class="record">
@@ -183,7 +209,47 @@
     </div>
 
     <div style="text-align: center;">
-        <a href="/" class="button">? Record More Energy</a>
+        <a href="/" class="button">Record More Energy</a>
+    </div>
+
+    <div class="main-card" style="margin-top:20px;">
+        <div class="section-title">Energy Tiles & Distances</div>
+        {% if tiles %}
+            {% for tile in tiles %}
+            <div class="record">
+                <div class="record-info">
+                    <div class="record-tile">{{ tile.name }}</div>
+                    <div class="record-time">Coordinates: {{ tile.lat }}, {{ tile.lon }}</div>
+                </div>
+                <div class="record-energy">
+                    <div class="energy-value">{{ tile.capacity }} cap</div>
+                    <div class="energy-label">{% if tile.distance_km is not none %}{{ tile.distance_km }} km{% else %}N/A{% endif %}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-data">No energy tiles available.</div>
+        {% endif %}
+    </div>
+
+    <div class="main-card" style="margin-top:20px;">
+        <div class="section-title">Leaderboard</div>
+        {% if leaderboard %}
+            {% for entry in leaderboard %}
+            <div class="record">
+                <div class="record-info">
+                    <div class="record-tile">#{{ entry.rank }} {{ entry.username }}</div>
+                    <div class="record-time">Tier: {{ entry.tier }}</div>
+                </div>
+                <div class="record-energy">
+                    <div class="energy-value">{{ entry.energy_wh }} Wh</div>
+                    <div class="energy-label">{{ entry.points }} pts</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-data">No leaderboard data available.</div>
+        {% endif %}
     </div>
 </div>
 

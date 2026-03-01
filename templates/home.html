@@ -225,7 +225,82 @@
             color: #1565c0;
             font-size: 14px;
         }
+        
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .map-controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .distance-info {
+            background: #e8f5e9;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #2e7d32;
+        }
+        .map-error {
+            padding: 20px;
+            text-align: center;
+            color: #a00;
+            font-weight: bold;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-mini-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+        
+        .stat-mini-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-mini-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-mini-unit {
+            font-size: 10px;
+            color: #999;
+        }
+        
+        /* Leaflet map styles */
+        #map {
+            border-radius: 10px;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -248,15 +323,36 @@
         </div>
 
         <div class="location-section">
-            <h2>Step 1: Choose Your Location</h2>
-            <p style="color: #666; margin-bottom: 15px;">Select a location where your sensor is installed:</p>
-            <div class="location-options">
-                <button type="button" class="location-btn" onclick="selectLocation(35.6595, 139.7004, 'Shibuya, Tokyo')">Shibuya</button>
-                <button type="button" class="location-btn" onclick="selectLocation(35.6762, 139.7674, 'Tokyo Station')">Tokyo Station</button>
-                <button type="button" class="location-btn" onclick="selectLocation(35.5308, 139.7100, 'Shinjuku, Tokyo')">Shinjuku</button>
-                <button type="button" class="location-btn" onclick="selectLocation(35.6654, 139.7033, 'Harajuku, Tokyo')">Harajuku</button>
-                <button type="button" class="location-btn" onclick="selectLocation(35.6730, 139.7725, 'Ginza, Tokyo')">Ginza</button>
+            <h2>Step 1: Get Your Location & View Energy Tiles</h2>
+            <p style="color: #666; margin-bottom: 15px;">Click the button below to detect your GPS location and see your position on the map with all nearby energy tile stations:</p>
+            <button type="button" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; width: 100%; transition: all 0.2s; margin-bottom: 15px;" onclick="detectGPSLocation()">📍 Detect My Location</button>
+            <div id="gpsStatus" style="padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center; display: none;"></div>
+            
+            <!-- Manual Location Entry by Address -->
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c5d3ff;">
+                <h3 style="margin: 0 0 12px 0; color: #445; font-size: 14px;">📌 Or Enter Location by Address</h3>
+                <input type="text" id="addressInput" placeholder="Enter address (e.g. Chennai, India or 123 Main Street, New York)" style="padding: 10px; border: 1px solid #bbb; border-radius: 6px; font-size: 14px; width: calc(100% - 20px); margin-bottom: 10px;" />
+                <button type="button" onclick="findLocationByAddress()" style="padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; width: 100%; margin-bottom: 10px;">🔍 Search Address</button>
+                <div id="addressStatus" style="display: none; padding: 8px; border-radius: 4px; margin-bottom: 10px; font-size: 13px;"></div>
+                
+                <h3 style="margin: 12px 0 8px 0; color: #445; font-size: 14px;">Or Enter Coordinates Directly</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <input type="number" id="manualLat" placeholder="Latitude" step="0.0001" style="padding: 10px; border: 1px solid #bbb; border-radius: 6px; font-size: 14px;" />
+                    <input type="number" id="manualLon" placeholder="Longitude" step="0.0001" style="padding: 10px; border: 1px solid #bbb; border-radius: 6px; font-size: 14px;" />
+                </div>
+                <button type="button" onclick="setManualLocation()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; width: 100%;">✓ Set Coordinates</button>
             </div>
+            
+            <!-- Google Maps Container -->
+            <div id="map" style="width: 100%; height: 450px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);"></div>
+            
+            <!-- Distance Information -->
+            <div id="distanceInfo" class="distance-info" style="display: none;">
+                <strong>📍 Selected Tile:</strong> <span id="selectedTileName"></span><br/>
+                <strong>📏 Distance:</strong> <span id="selectedDistance"></span><br/>
+                <strong>⏱️ Last Detection:</strong> <span id="lastDetection"></span>
+            </div>
+            
             <div id="selectedLocation" class="coord-display" style="display: none; margin-top: 15px;"></div>
         </div>
 
@@ -270,6 +366,9 @@
             <h3>✓ Configuration Complete</h3>
             <p id="statusText"></p>
             <p style="margin-top: 10px; font-size: 12px;">Your sensor is now connected to <strong id="selectedTileName"></strong>. Energy data will be automatically collected.</p>
+            <button type="button" onclick="goToDashboard()" style="margin-top: 20px; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; width: 100%; transition: all 0.2s;">
+                📊 Go to Dashboard & View Stats
+            </button>
         </div>
     </div>
 </div>
@@ -278,14 +377,145 @@
     let userLocation = null;
     let selectedTileId = null;
     let allTiles = [];
+    let map = null;
+    let markers = {};
+    let userMarker = null;
+    let distanceLines = [];
+    let currentUser = null; // store fetched username
+    let selectedTile = null;
+
+    // Initialize Leaflet Map
+    function initializeMap(centerLat = 13.0827, centerLon = 80.2707) {
+        if (map) return; // Already initialized
+        
+        const mapContainer = document.getElementById('map');
+        mapContainer.style.display = 'block';
+        
+        map = L.map(mapContainer).setView([centerLat, centerLon], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Load and add all tile markers
+        loadTileMarkers();
+    }
+
+    // Load all tiles and add markers to map
+    async function loadTileMarkers() {
+        try {
+            const resp = await fetch('/api/get-tiles', { credentials: 'same-origin' });
+            allTiles = await resp.json();
+            
+            allTiles.forEach(tile => {
+                addTileMarker(tile);
+            });
+        } catch (e) {
+            console.error('Failed to load tiles:', e);
+        }
+    }
+
+    function addTileMarker(tile) {
+        const marker = L.marker([parseFloat(tile.lat), parseFloat(tile.lon)], {
+            title: tile.name
+        }).addTo(map);
+        
+        const popupContent = `<div style="padding: 8px; font-size: 13px;">
+            <strong>${tile.name}</strong><br/>
+            Capacity: ${tile.capacity} Wh<br/>
+            <button onclick="selectTileFromMap('${tile.id}', '${tile.name}', ${tile.lat}, ${tile.lon})" style="margin-top: 6px; padding: 4px 8px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Select</button>
+        </div>`;
+        
+        marker.bindPopup(popupContent);
+        marker.setIcon(L.icon({
+            iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" width="32" height="32"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.1 8 15 8 15s8-10 8-15c0-4.4-3.6-8-8-8z"/></svg>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        }));
+        
+        markers[tile.id] = marker;
+    }
+
+    function addUserMarker(lat, lon) {
+        // Remove existing user marker
+        if (userMarker) map.removeLayer(userMarker);
+        
+        userMarker = L.marker([lat, lon], {
+            title: 'Your Location',
+            icon: L.icon({
+                iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="blue" width="32" height="32"><circle cx="12" cy="12" r="8"/></svg>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            })
+        }).addTo(map);
+        
+        // Center map on user location
+        map.setView([lat, lon], 13);
+        
+        // Draw distance lines to nearby tiles
+        drawDistancesToTiles(lat, lon);
+    }
+
+    function drawDistancesToTiles(userLat, userLon) {
+        // Remove old distance lines
+        distanceLines.forEach(line => map.removeLayer(line));
+        distanceLines = [];
+        
+        allTiles.forEach(tile => {
+            const distance = calculateDistance(userLat, userLon, parseFloat(tile.lat), parseFloat(tile.lon));
+            
+            // Only draw lines to tiles within 5km
+            if (distance <= 5) {
+                const line = L.polyline([
+                    [userLat, userLon],
+                    [parseFloat(tile.lat), parseFloat(tile.lon)]
+                ], {
+                    color: '#667eea',
+                    opacity: 0.4,
+                    weight: 2
+                }).addTo(map);
+                
+                distanceLines.push(line);
+                
+                // Add distance label at midpoint
+                const midLat = (userLat + parseFloat(tile.lat)) / 2;
+                const midLon = (userLon + parseFloat(tile.lon)) / 2;
+                
+                L.marker([midLat, midLon], {
+                    icon: L.divIcon({
+                        html: `<div style="background: #667eea; color: white; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap;">${distance.toFixed(2)}km</div>`,
+                        iconSize: null,
+                        className: 'distance-label'
+                    })
+                }).addTo(map);
+            }
+        });
+    }
+
+    function selectTileFromMap(tileId, tileName, tileLat, tileLon) {
+        selectedTile = { id: tileId, name: tileName, lat: tileLat, lon: tileLon };
+        selectedTileId = tileId;
+        
+        // Update selected tile display
+        if (userLocation) {
+            const distance = calculateDistance(userLocation.lat, userLocation.lon, parseFloat(tileLat), parseFloat(tileLon));
+            document.getElementById('selectedDistance').textContent = distance.toFixed(3) + ' km';
+            document.getElementById('selectedTileName').textContent = tileName;
+            document.getElementById('lastDetection').textContent = new Date().toLocaleTimeString();
+            document.getElementById('distanceInfo').style.display = 'block';
+        }
+    }
 
     // Fetch and display current user on page load
     async function loadUserInfo() {
         try {
-            const resp = await fetch('/api/user-info');
+            const resp = await fetch('/api/user-info', { credentials: 'same-origin' });
             if (resp.ok) {
                 const data = await resp.json();
-                document.getElementById('usernameDisplay').textContent = data.username;
+                currentUser = data.username;
+                document.getElementById('usernameDisplay').textContent = currentUser;
             }
         } catch (e) {
             console.error('Failed to load user info:', e);
@@ -304,23 +534,242 @@
         return R * c;
     }
 
+    function detectGPSLocation() {
+        const gpsStatus = document.getElementById('gpsStatus');
+        gpsStatus.style.display = 'block';
+        gpsStatus.innerHTML = '⏳ Requesting location from your device...';
+        gpsStatus.style.background = '#fff3cd';
+        gpsStatus.style.color = '#856404';
+        
+        if (!navigator.geolocation) {
+            gpsStatus.innerHTML = '❌ Geolocation not supported.<br/>Please use Chrome, Firefox, Safari or Edge browser.';
+            gpsStatus.style.background = '#f8d7da';
+            gpsStatus.style.color = '#721c24';
+            return;
+        }
+        
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0
+        };
+        
+        const successHandler = async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            gpsStatus.innerHTML = '✅ <strong>Location Detected!</strong><br/>Latitude: ' + lat.toFixed(6) + '<br/>Longitude: ' + lon.toFixed(6) + '<br/>Accuracy: ±' + Math.round(accuracy) + 'm';
+            gpsStatus.style.background = '#d4edda';
+            gpsStatus.style.color = '#155724';
+            
+            // Set user location
+            userLocation = { lat: lat, lon: lon };
+            
+            // Initialize map if not already done
+            if (!map) {
+                initializeMap(lat, lon);
+            }
+            addUserMarker(lat, lon);
+            
+            // always display list of tiles with distances below map
+            displayTiles(lat, lon);
+            
+            // Check if user is on a tile for power generation
+            try {
+                    const response = await fetch('/api/check-gps-location', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ latitude: lat, longitude: lon })
+                    });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show power generated
+                    showPowerGenerated(result);
+                } else if (result.status === 'no_tile') {
+                    // Show nearby tiles (narrower list)
+                    displayNearbyTiles(result.nearby_tiles);
+                }
+            } catch (e) {
+                console.error('Error checking location:', e);
+            }
+        };
+        
+        const errorHandler = (error) => {
+            let message = '❌ Unable to get your location.<br/>';
+            
+            if (error.code === error.PERMISSION_DENIED) {
+                message += '⚠️ <strong>Location permission denied.</strong><br/>' +
+                           'On mobile: Go to phone settings → Location → App Permissions → Allow.<br/>' +
+                           'On desktop: Click location icon in address bar and select Always Allow.';
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                message += '📍 Device location unavailable.<br/>Try: Enable GPS on your phone, step outside, or use WiFi-based location.<br/>Alternative: Use the address search above.';
+            } else if (error.code === error.TIMEOUT) {
+                message += '⏱️ Location request timed out.<br/>Try: Move to open area, refresh page, and try again.';
+            } else {
+                message += '❌ ' + (error.message || 'Unknown error');
+            }
+            
+            gpsStatus.innerHTML = message;
+            gpsStatus.style.background = '#f8d7da';
+            gpsStatus.style.color = '#721c24';
+            console.error('Geolocation error:', error);
+        };
+        
+        navigator.geolocation.getCurrentPosition(successHandler, errorHandler, options);
+    }
+    
+    async function findLocationByAddress() {
+        const address = document.getElementById('addressInput').value.trim();
+        const addressStatus = document.getElementById('addressStatus');
+        
+        if (!address) {
+            addressStatus.innerHTML = '❌ Please enter an address';
+            addressStatus.style.background = '#f8d7da';
+            addressStatus.style.color = '#721c24';
+            addressStatus.style.display = 'block';
+            return;
+        }
+        
+        addressStatus.innerHTML = '⏳ Searching for address...';
+        addressStatus.style.background = '#fff3cd';
+        addressStatus.style.color = '#856404';
+        addressStatus.style.display = 'block';
+        
+        try {
+            // Use Nominatim (OpenStreetMap) to geocode address
+            const response = await fetch(
+                'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(address) + '&format=json',
+                { timeout: 10000 }
+            );
+            
+            const results = await response.json();
+            
+            if (!results || results.length === 0) {
+                addressStatus.innerHTML = '❌ Address not found. Try a different search term.';
+                addressStatus.style.background = '#f8d7da';
+                addressStatus.style.color = '#721c24';
+                return;
+            }
+            
+            const location = results[0];
+            const lat = parseFloat(location.lat);
+            const lon = parseFloat(location.lon);
+            const displayName = location.display_name;
+            
+            addressStatus.innerHTML = '✅ Found: <strong>' + displayName + '</strong>';
+            addressStatus.style.background = '#d4edda';
+            addressStatus.style.color = '#155724';
+            
+            // Set the coordinates
+            document.getElementById('manualLat').value = lat.toFixed(6);
+            document.getElementById('manualLon').value = lon.toFixed(6);
+            
+            // Auto-apply the location
+            setTimeout(() => setManualLocation(), 500);
+            
+        } catch (e) {
+            addressStatus.innerHTML = '❌ Error searching address: ' + e.message;
+            addressStatus.style.background = '#f8d7da';
+            addressStatus.style.color = '#721c24';
+            console.error('Geocoding error:', e);
+        }
+    }
+
+    function showPowerGenerated(result) {
+        let message = `<div style="background: #d4edda; padding: 15px; border-radius: 8px; color: #155724;">
+            <strong>⚡ Power Generated at ${result.tile_name}!</strong><br><br>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 14px;">
+                <div>💡 Energy: <strong>${result.electricity_wh.toFixed(4)} Wh</strong></div>
+                <div>⚡ Voltage: <strong>${result.voltage.toFixed(2)} V</strong></div>
+                <div>🔌 Ampere: <strong>${result.ampere.toFixed(2)} A</strong></div>
+                <div>💪 Pressure: <strong>${result.pressure.toFixed(2)} PSI</strong></div>
+                <div style="grid-column: 1/-1; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(21, 87, 36, 0.3);">
+                    <div>✓ Total Energy: <strong>${result.total_energy.toFixed(4)} Wh</strong></div>
+                    <div>✓ Monthly Energy: <strong>${result.monthly_energy.toFixed(4)} Wh</strong></div>
+                    <div>✓ Total Voltage: <strong>${result.total_voltage.toFixed(2)} V</strong></div>
+                    <div>✓ Total Ampere: <strong>${result.total_ampere.toFixed(2)} A</strong></div>
+                    <div>✓ Reward Points: <strong>${parseInt(result.reward_points)} pts</strong></div>
+                </div>
+            </div>
+        </div>`;
+        
+        document.getElementById('gpsStatus').innerHTML = message;
+        document.getElementById('statusSection').style.display = 'block';
+        document.getElementById('tilesSection').style.display = 'none';
+    }
+
+    function displayNearbyTiles(nearbyTiles) {
+        const tilesSection = document.getElementById('tilesSection');
+        const list = document.getElementById('tilesList');
+        
+        if (nearbyTiles && nearbyTiles.length > 0) {
+            tilesSection.style.display = 'block';
+            list.innerHTML = '';
+            
+            nearbyTiles.forEach((tile, idx) => {
+                const card = document.createElement('div');
+                card.className = 'tile-card' + (idx === 0 ? ' selected' : '');
+                card.innerHTML = `
+                    <div class="tile-name">${idx === 0 ? '📍 ' : ''}${tile.name}</div>
+                    <div class="tile-distance">${tile.distance_km.toFixed(3)} km away</div>
+                    <button style="margin-top: 10px; padding: 8px 16px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="recordEnergyAtTile('${tile.id}', '${tile.name}')">Record Energy</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+    }
+
+    async function recordEnergyAtTile(tileId, tileName) {
+        if (!userLocation) {
+            alert('Location not detected');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/check-gps-location', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: userLocation.lat, longitude: userLocation.lon })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                showPowerGenerated(result);
+                // Redirect to dashboard after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+            }
+        } catch (e) {
+            alert('Error recording energy: ' + e.message);
+        }
+    }
+
     function selectLocation(lat, lon, name) {
         userLocation = { lat: lat, lon: lon };
         
         document.getElementById('selectedLocation').textContent = '✓ Selected: ' + name + ' (Lat: ' + lat.toFixed(4) + ', Lon: ' + lon.toFixed(4) + ')';
         document.getElementById('selectedLocation').style.display = 'block';
         
-        document.querySelectorAll('.location-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
         document.getElementById('tilesSection').style.display = 'block';
         document.getElementById('statusSection').style.display = 'none';
         displayTiles(lat, lon);
+        
+        // Add marker to map for user if map already available
+        if (map) {
+            addUserMarker(lat, lon);
+        }
     }
 
     async function displayTiles(lat, lon) {
         try {
-            const resp = await fetch('/api/get-tiles');
+            const resp = await fetch('/api/get-tiles', { credentials: 'same-origin' });
             allTiles = await resp.json();
         } catch (e) {
             console.error('Fetch error:', e);
@@ -370,9 +819,90 @@
         document.getElementById('statusSection').style.display = 'block';
     }
 
-    // Load user info when page loads
-    window.addEventListener('load', loadUserInfo);
-</script>
+    async function goToDashboard() {
+        let username = currentUser;
+        if (!username) {
+            // fetch again in case loadUserInfo is still pending
+            try {
+                const resp = await fetch('/api/user-info', { credentials: 'same-origin' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    username = data.username;
+                    currentUser = username;
+                    document.getElementById('usernameDisplay').textContent = username;
+                }
+            } catch (e) {
+                console.error('Error fetching user info during redirect:', e);
+            }
+        }
+        if (!username || username === 'Loading...' || username === 'User') {
+            username = document.getElementById('usernameDisplay').textContent;
+        }
+        if (username && username !== 'Loading...' && username !== 'User') {
+            // navigate via generic endpoint so server chooses correct user
+            window.location.href = '/dashboard';
+        } else {
+            alert('Unable to navigate: user info not loaded. Please refresh the page and try again.');
+        }
+    }
 
-</body>
-</html>
+    function setManualLocation() {
+        const lat = parseFloat(document.getElementById('manualLat').value);
+        const lon = parseFloat(document.getElementById('manualLon').value);
+        
+        if (isNaN(lat) || isNaN(lon)) {
+            alert('Please enter valid latitude and longitude values');
+            return;
+        }
+        
+        if (lat < -90 || lat > 90) {
+            alert('Latitude must be between -90 and 90');
+            return;
+        }
+        
+        if (lon < -180 || lon > 180) {
+            alert('Longitude must be between -180 and 180');
+            return;
+        }
+        
+        const gpsStatus = document.getElementById('gpsStatus');
+        gpsStatus.style.display = 'block';
+        gpsStatus.innerHTML = '✅ <strong>Location Set!</strong><br/>Latitude: ' + lat.toFixed(6) + '<br/>Longitude: ' + lon.toFixed(6);
+        gpsStatus.style.background = '#d4edda';
+        gpsStatus.style.color = '#155724';
+        
+        // Set user location
+        userLocation = { lat: lat, lon: lon };
+        
+        // Initialize map if not already done
+        if (!map) {
+            initializeMap(lat, lon);
+        }
+        addUserMarker(lat, lon);
+        
+        // Display list of tiles with distances
+        displayTiles(lat, lon);
+        
+        // Check if user is on a tile for power generation
+        try {
+            fetch('/api/check-gps-location', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: lat, longitude: lon })
+            }).then(response => response.json()).then(result => {
+                if (result.status === 'success') {
+                    showPowerGenerated(result);
+                } else if (result.status === 'no_tile') {
+                    displayNearbyTiles(result.nearby_tiles);
+                }
+            });
+        } catch (e) {
+            console.error('Error checking location:', e);
+        }
+    }
+
+    </script>
+
+    </body>
+    </html>
