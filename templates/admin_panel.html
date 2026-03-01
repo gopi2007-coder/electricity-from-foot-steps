@@ -208,35 +208,37 @@
             <div style="grid-column: 1 / -1;">
                 <div class="stat-card" style="padding: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: #333; font-size: 22px; margin: 0;">? Energy Tile Locations</h2>
-                        <a href="/add-tile" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s;">+ Add Tile</a>
+                        <h2 style="color: #333; font-size: 22px; margin: 0;">⚡ Energy Tile Locations</h2>
+                        <button onclick="openAddTileModal()" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; font-size: 14px; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);">+ Add New Tile</button>
                     </div>
                     
                     {% if energy_tiles %}
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                             <thead>
-                                <tr style="background-color: #f5f5f5;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Tile ID</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Name</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Latitude</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Longitude</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Radius</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Capacity</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0;">Actions</th>
+                                <tr style="background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);">
+                                    <th style="padding: 15px; text-align: left; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Tile ID</th>
+                                    <th style="padding: 15px; text-align: left; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Location Name</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Usage Count</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Latitude</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Longitude</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Range (°)</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Capacity</th>
+                                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #333; border-bottom: 3px solid #f5576c;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for tile in energy_tiles %}
-                                <tr style="border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9f9f9'" onmouseout="this.style.backgroundColor='white'">
-                                    <td style="padding: 12px; color: #789;">{{ tile['id'] }}</td>
-                                    <td style="padding: 12px; color: #333; font-weight: 500;">{{ tile['name'] }}</td>
-                                    <td style="padding: 12px; text-align: center; color: #666;">{{ "%.4f"|format(tile['lat']) }}</td>
-                                    <td style="padding: 12px; text-align: center; color: #666;">{{ "%.4f"|format(tile['lon']) }}</td>
-                                    <td style="padding: 12px; text-align: center; color: #666;">{{ "%.4f"|format(tile['radius']) }}</td>
-                                    <td style="padding: 12px; text-align: center; color: #666;">{{ tile['capacity'] }} Wh</td>
-                                    <td style="padding: 12px; text-align: center;">
-                                        <button onclick="removeTile('{{ tile['id'] }}')" style="padding: 6px 12px; background-color: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#ff5555'" onmouseout="this.style.backgroundColor='#ff6b6b'">Remove</button>
+                                <tr style="border-bottom: 1px solid #f0f0f0; transition: all 0.3s;" onmouseover="this.style.backgroundColor='#fff9f0'; this.style.boxShadow='inset 0 0 8px rgba(245, 87, 108, 0.1)';" onmouseout="this.style.backgroundColor='white'; this.style.boxShadow='none';">
+                                    <td style="padding: 15px; color: #f5576c; font-weight: 700;">{{ tile['id'] }}</td>
+                                    <td style="padding: 15px; color: #333; font-weight: 600;">{{ tile['name'] }}</td>
+                                    <td style="padding: 15px; text-align: center;"><span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ff6b6b 100%); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; display: inline-block; min-width: 50px;">{{ tile.get('usage_count', 0) }}</span></td>
+                                    <td style="padding: 15px; text-align: center; color: #666; font-family: 'Courier New', monospace; font-size: 13px;">{{ "%.6f"|format(tile['lat']) }}</td>
+                                    <td style="padding: 15px; text-align: center; color: #666; font-family: 'Courier New', monospace; font-size: 13px;">{{ "%.6f"|format(tile['lon']) }}</td>
+                                    <td style="padding: 15px; text-align: center; color: #666;">{{ "%.4f"|format(tile['radius']) }}</td>
+                                    <td style="padding: 15px; text-align: center; color: #666; font-weight: 600;">{{ tile['capacity'] }} Wh</td>
+                                    <td style="padding: 15px; text-align: center; display: flex; gap: 8px; justify-content: center;">
+                                        <button onclick="openRemoveConfirmation('{{ tile['id'] }}', '{{ tile['name'] }}')" style="padding: 8px 16px; background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.3s; box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);">🗑 Remove</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -244,34 +246,175 @@
                         </table>
                     </div>
                     {% else %}
-                    <p style="color: #999; text-align: center; padding: 20px;">No energy tiles found. <a href="/add-tile" style="color: #f5576c; text-decoration: none; font-weight: 600;">Create one</a></p>
+                    <p style="color: #999; text-align: center; padding: 20px;">No energy tiles found. Click "+ Add New Tile" to create one.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
     
-    <script>
-        async function removeTile(tileId) {
-            if (confirm(\Are you sure you want to remove this tile?\)) {
-                try {
-                    const response = await fetch(\/remove-tile/\\, {
-                        method: 'POST'
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.status === 'success') {
-                        alert(result.message);
-                        location.reload();
-                    } else {
-                        alert('Error: ' + result.message);
-                    }
-                } catch (error) {
-                    alert('Error removing tile: ' + error.message);
-                }
+    <!-- Add Tile Modal -->
+    <div id="addTileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3); animation: slideIn 0.3s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #333; margin: 0; font-size: 22px;">📍 Add New Energy Tile</h3>
+                <button onclick="closeAddTileModal()" style="border: none; background: none; font-size: 28px; cursor: pointer; color: #999;">✕</button>
+            </div>
+            
+            <form id="addTileForm" onsubmit="addTile(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 14px;">Location Name *</label>
+                    <input type="text" id="modal_tile_name" name="tile_name" placeholder="e.g., Shibuya Crossing" required style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 14px;">Latitude *</label>
+                        <input type="number" id="modal_latitude" name="latitude" step="0.0001" placeholder="35.6595" required style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 14px;">Longitude *</label>
+                        <input type="number" id="modal_longitude" name="longitude" step="0.0001" placeholder="139.7004" required style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 14px;">Detection Range (°)</label>
+                        <input type="number" id="modal_radius" name="radius" step="0.0001" value="0.001" placeholder="0.001" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 14px;">Capacity (Wh)</label>
+                        <input type="number" id="modal_capacity" name="capacity" step="1" value="1000" placeholder="1000" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                
+                <div id="messageDiv" style="display: none; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 10px;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);">✅ Add Tile</button>
+                    <button type="button" onclick="closeAddTileModal()" style="flex: 1; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Remove Confirmation Modal -->
+    <div id="removeConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; width: 90%; max-width: 400px; box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3); animation: slideIn 0.3s ease; border-left: 5px solid #ff6b6b;">
+            <h3 style="color: #333; margin: 0 0 15px 0; font-size: 20px;">⚠️ Confirm Removal</h3>
+            <p id="removeMessage" style="color: #666; margin: 0 0 25px 0; line-height: 1.6;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="confirmRemoveTile()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);">Yes, Remove It</button>
+                <button onclick="closeRemoveConfirmation()" style="flex: 1; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
+        
+        #addTileModal input:focus, #removeConfirmModal input:focus {
+            outline: none;
+            border-color: #f5576c !important;
+            box-shadow: 0 0 8px rgba(245, 87, 108, 0.2);
+        }
+    </style>
+    
+    <script>
+        let currentRemoveTileId = null;
+        
+        function openAddTileModal() {
+            document.getElementById('addTileModal').style.display = 'flex';
+        }
+        
+        function closeAddTileModal() {
+            document.getElementById('addTileModal').style.display = 'none';
+            document.getElementById('addTileForm').reset();
+            document.getElementById('messageDiv').style.display = 'none';
+        }
+        
+        function openRemoveConfirmation(tileId, tileName) {
+            currentRemoveTileId = tileId;
+            document.getElementById('removeMessage').textContent = `Are you sure you want to permanently remove "${tileName}" (${tileId})? This action cannot be undone.`;
+            document.getElementById('removeConfirmModal').style.display = 'flex';
+        }
+        
+        function closeRemoveConfirmation() {
+            document.getElementById('removeConfirmModal').style.display = 'none';
+            currentRemoveTileId = null;
+        }
+        
+        async function addTile(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(document.getElementById('addTileForm'));
+            const messageDiv = document.getElementById('messageDiv');
+            
+            try {
+                const response = await fetch('/add-tile', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    messageDiv.innerHTML = `<div style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 10px;">${result.message}</div>`;
+                    messageDiv.style.display = 'block';
+                    document.getElementById('addTileForm').reset();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    messageDiv.innerHTML = `<div style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 10px;">Error: ${result.message}</div>`;
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 10px;">Error adding tile: ${error.message}</div>`;
+                messageDiv.style.display = 'block';
+            }
+        }
+        
+        async function confirmRemoveTile() {
+            if (!currentRemoveTileId) return;
+            
+            try {
+                const response = await fetch(`/remove-tile/${currentRemoveTileId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    closeRemoveConfirmation();
+                    alert('✅ Tile removed successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error removing tile: ' + error.message);
+            }
+        }
+        
+        // Close modals when clicking outside
+        document.getElementById('addTileModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddTileModal();
+        });
+        
+        document.getElementById('removeConfirmModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRemoveConfirmation();
+        });
     </script>
 </body>
 </html>
