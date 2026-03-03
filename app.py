@@ -67,30 +67,6 @@ def load_users():
         pass
     return users
 
-
-def load_active_users():
-    """Load currently active (logged-in) users from storage"""
-    active = set()
-    try:
-        with open("active_users.txt", "r") as f:
-            for line in f:
-                u = line.strip()
-                if u:
-                    active.add(u)
-    except:
-        pass
-    return active
-
-
-def save_active_users(active_set):
-    """Save active users set to storage"""
-    try:
-        with open("active_users.txt", "w") as f:
-            for u in sorted(active_set):
-                f.write(u + "\n")
-    except Exception:
-        pass
-
 def save_users(users):
     """Save user accounts"""
     with open("users.txt", "w") as f:
@@ -140,11 +116,11 @@ def save_mfa_sessions(sessions):
 # ============= ENERGY TILE DATABASE =============
 # Default tiles - will be created on first run
 DEFAULT_ENERGY_TILES = {
-    "tile_001": {"name": "Shibuya Crossing", "lat": 35.6595, "lon": 139.7004, "radius": 0.001, "capacity": 1000, "usage_count": 0},
-    "tile_002": {"name": "Tokyo Station", "lat": 35.6762, "lon": 139.7674, "radius": 0.001, "capacity": 800, "usage_count": 0},
-    "tile_003": {"name": "Shinjuku Station", "lat": 35.5308, "lon": 139.7100, "radius": 0.001, "capacity": 900, "usage_count": 0},
-    "tile_004": {"name": "Harajuku", "lat": 35.6654, "lon": 139.7033, "radius": 0.0015, "capacity": 700, "usage_count": 0},
-    "tile_005": {"name": "Ginza", "lat": 35.6730, "lon": 139.7725, "radius": 0.0012, "capacity": 600, "usage_count": 0},
+    "tile_001": {"name": "Shibuya Crossing", "lat": 35.6595, "lon": 139.7004, "radius": 0.001, "capacity": 1000},
+    "tile_002": {"name": "Tokyo Station", "lat": 35.6762, "lon": 139.7674, "radius": 0.001, "capacity": 800},
+    "tile_003": {"name": "Shinjuku Station", "lat": 35.5308, "lon": 139.7100, "radius": 0.001, "capacity": 900},
+    "tile_004": {"name": "Harajuku", "lat": 35.6654, "lon": 139.7033, "radius": 0.0015, "capacity": 700},
+    "tile_005": {"name": "Ginza", "lat": 35.6730, "lon": 139.7725, "radius": 0.0012, "capacity": 600},
 }
 
 def load_energy_tiles():
@@ -162,8 +138,7 @@ def load_energy_tiles():
                             "lat": float(parts[2]),
                             "lon": float(parts[3]),
                             "radius": float(parts[4]),
-                            "capacity": int(parts[5]),
-                            "usage_count": int(parts[6]) if len(parts) > 6 else 0
+                            "capacity": int(parts[5])
                         }
     except:
         # Initialize with default tiles if file doesn't exist
@@ -176,8 +151,7 @@ def save_energy_tiles(tiles):
     with open("energy_tiles.txt", "w") as f:
         for tile_id in tiles:
             tile = tiles[tile_id]
-            usage = tile.get('usage_count', 0)
-            f.write(f"{tile_id}|{tile['name']}|{tile['lat']}|{tile['lon']}|{tile['radius']}|{tile['capacity']}|{usage}\n")
+            f.write(f"{tile_id}|{tile['name']}|{tile['lat']}|{tile['lon']}|{tile['radius']}|{tile['capacity']}\n")
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Calculate distance between two GPS coordinates in kilometers"""
@@ -198,21 +172,6 @@ def is_on_energy_tile(user_lat, user_lon):
             return tile_id, tile_info
     return None, None
 
-def ensure_monthly_reset(user_data, username):
-    """Reset monthly counters when a new month is reached."""
-    now_month = datetime.now().strftime("%Y-%m")
-    user = user_data.get(username)
-    if not user:
-        return
-    if user.get("last_reset_month") != now_month:
-        user["monthly_energy_wh"] = 0
-        user["monthly_voltage"] = 0
-        user["monthly_ampere"] = 0
-        user["monthly_pressure"] = 0
-        user["monthly_reward_points"] = 0
-        user["monthly_steps"] = 0
-        user["last_reset_month"] = now_month
-
 def load_user_data():
     """Load all user data including energy records and rewards"""
     data = {}
@@ -221,26 +180,18 @@ def load_user_data():
             for line in f:
                 if line.strip():
                     parts = line.strip().split("|")
-                    # expanded fields: username|total_energy_wh|reward_points|tiles_visited|total_steps|pressure|ampere|voltage|monthly_energy|monthly_voltage|monthly_ampere|monthly_pressure|monthly_reward|monthly_steps|last_reset_month
-                    if len(parts) >= 5:
+                    if len(parts) >= 7:
                         username = parts[0]
-                        user = {
+                        data[username] = {
                             "total_energy_wh": float(parts[1]),
                             "reward_points": float(parts[2]),
-                            "tiles_visited": int(parts[3]),
-                            "total_steps": int(parts[4]),
-                            "pressure_given": float(parts[5]) if len(parts) > 5 else 0,
-                            "ampere": float(parts[6]) if len(parts) > 6 else 0,
-                            "voltage": float(parts[7]) if len(parts) > 7 else 0,
-                            "monthly_energy_wh": float(parts[8]) if len(parts) > 8 else 0,
-                            "monthly_voltage": float(parts[9]) if len(parts) > 9 else 0,
-                            "monthly_ampere": float(parts[10]) if len(parts) > 10 else 0,
-                            "monthly_pressure": float(parts[11]) if len(parts) > 11 else 0,
-                            "monthly_reward_points": float(parts[12]) if len(parts) > 12 else 0,
-                            "monthly_steps": int(parts[13]) if len(parts) > 13 else 0,
-                            "last_reset_month": parts[14] if len(parts) > 14 else ""
+                            "pressure_given": float(parts[3]),
+                            "ampere": float(parts[4]),
+                            "voltage": float(parts[5]),
+                            "tiles_visited": int(parts[6]),
+                            "total_steps": int(parts[7]) if len(parts) > 7 else 0,
+                            "assigned_location": parts[8] if len(parts) > 8 else None
                         }
-                        data[username] = user
     except:
         pass
     return data
@@ -250,8 +201,7 @@ def save_user_data(data):
     with open("user_data.txt", "w") as f:
         for username in data:
             user = data[username]
-            # ensure all monthly fields exist
-            f.write(f"{username}|{user['total_energy_wh']}|{user['reward_points']}|{user['tiles_visited']}|{user['total_steps']}|{user.get('pressure_given', 0)}|{user.get('ampere', 0)}|{user.get('voltage', 0)}|{user.get('monthly_energy_wh', 0)}|{user.get('monthly_voltage', 0)}|{user.get('monthly_ampere', 0)}|{user.get('monthly_pressure', 0)}|{user.get('monthly_reward_points', 0)}|{user.get('monthly_steps', 0)}|{user.get('last_reset_month', '')}\n")
+            f.write(f"{username}|{user['total_energy_wh']}|{user['reward_points']}|{user.get('pressure_given', 0)}|{user.get('ampere', 0)}|{user.get('voltage', 0)}|{user.get('tiles_visited', 0)}|{user.get('total_steps', 0)}|{user.get('assigned_location', '')}\n")
 
 def load_energy_records():
     """Load IoT energy tile records"""
@@ -326,11 +276,7 @@ def login():
             session['username'] = username
             session['user_type'] = 'user'
             session.permanent = True
-            # mark user active
-            active = load_active_users()
-            active.add(username)
-            save_active_users(active)
-
+            
             return redirect(f'/dashboard/{username}')
         else:
             return render_template("login.html", error="Invalid username or password")
@@ -479,6 +425,7 @@ def register():
             "pressure_given": 0,
             "ampere": 0,
             "voltage": 0,
+            "tiles_visited": 0,
             "total_steps": 0
         }
         save_user_data(user_data)
@@ -527,15 +474,6 @@ def admin_register():
 @app.route("/logout")
 def logout():
     """Logout user"""
-    # remove from active users
-    username = session.get('username')
-    try:
-        active = load_active_users()
-        if username in active:
-            active.remove(username)
-            save_active_users(active)
-    except Exception:
-        pass
     session.clear()
     return redirect('/login')
 
@@ -582,8 +520,7 @@ def admin_panel():
             "lat": tile["lat"],
             "lon": tile["lon"],
             "radius": tile["radius"],
-            "capacity": tile["capacity"],
-            "usage_count": tile.get("usage_count", 0)
+            "capacity": tile["capacity"]
         })
     
     return render_template("admin_panel.html",
@@ -596,6 +533,20 @@ def admin_panel():
         top_users=top_users,
         energy_tiles=tiles_list
     )
+
+
+@app.route("/manage-locations")
+@admin_login_required
+def manage_locations():
+    """Admin location management page"""
+    return render_template("manage_locations.html")
+
+
+@app.route("/choose-location")
+@login_required
+def choose_location():
+    """User location selection page"""
+    return render_template("choose_location.html", username=session['username'])
 
 
 
@@ -672,165 +623,6 @@ def iot_sensor_endpoint():
         return jsonify({"status": "error", "message": str(e)}), 400
 
 
-@app.route("/api/check-gps-location", methods=["POST"])
-@login_required
-def check_gps_location():
-    """Check user's GPS location and calculate generated power if on a tile"""
-    try:
-        data = request.get_json()
-        username = session.get('username')
-        user_lat = float(data.get("latitude"))
-        user_lon = float(data.get("longitude"))
-        
-        if not username:
-            return jsonify({"status": "error", "message": "Not logged in"}), 401
-        
-        # Check if user is on an energy tile
-        tile_id, tile_info = is_on_energy_tile(user_lat, user_lon)
-        
-        if not tile_id:
-            return jsonify({
-                "status": "no_tile",
-                "message": "Not on any energy tile",
-                "nearby_tiles": get_nearby_tiles(user_lat, user_lon)
-            })
-        
-        # Determine if user location is an exact match to the tile location
-        # Use a small epsilon (degrees) roughly ~5m (0.00005° ≈ 5.5m)
-        exact_match_epsilon = 0.00005
-        exact_match = (abs(user_lat - tile_info["lat"]) <= exact_match_epsilon and
-                       abs(user_lon - tile_info["lon"]) <= exact_match_epsilon)
-
-        # Generate power values based on tile capacity and random user activity
-        import random
-        if exact_match:
-            # Stronger readings when the user is standing exactly on the tile center
-            base_power_wh = tile_info["capacity"] * 0.002 * random.uniform(0.8, 1.2)
-            voltage_generated = random.uniform(10, 20)
-            ampere_generated = random.uniform(0.5, 1.0)
-            pressure_applied = random.uniform(150, 350)
-        else:
-            # Simulate power generation for near-miss or within tile radius
-            base_power_wh = tile_info["capacity"] * 0.001 * random.uniform(0.4, 1.0)
-            voltage_generated = random.uniform(5, 15)
-            ampere_generated = random.uniform(0.1, 0.5)
-            pressure_applied = random.uniform(50, 150)
-        
-        # Update user data
-        user_data = load_user_data()
-        # make sure monthly counters are reset if a new month has started
-        ensure_monthly_reset(user_data, username)
-        if username not in user_data:
-            user_data[username] = {
-                "total_energy_wh": 0,
-                "reward_points": 0,
-                "tiles_visited": 0,
-                "total_steps": 0,
-                "pressure_given": 0,
-                "ampere": 0,
-                "voltage": 0
-            }
-            # initialize monthly fields too
-            user_data[username]["monthly_energy_wh"] = 0
-            user_data[username]["monthly_voltage"] = 0
-            user_data[username]["monthly_ampere"] = 0
-            user_data[username]["monthly_pressure"] = 0
-            user_data[username]["monthly_reward_points"] = 0
-            user_data[username]["monthly_steps"] = 0
-            user_data[username]["last_reset_month"] = datetime.now().strftime("%Y-%m")
-        
-        # Calculate reward points for this generation
-        reward_points = calculate_reward_points(base_power_wh)
-
-        # Update metrics
-        user_data[username]["total_energy_wh"] += base_power_wh
-        user_data[username]["pressure_given"] += pressure_applied
-        user_data[username]["ampere"] += ampere_generated
-        user_data[username]["voltage"] += voltage_generated
-        user_data[username]["total_steps"] += 1
-        # also accumulate monthly stats
-        user_data[username]["monthly_energy_wh"] = user_data[username].get("monthly_energy_wh", 0) + base_power_wh
-        user_data[username]["monthly_voltage"] = user_data[username].get("monthly_voltage", 0) + voltage_generated
-        user_data[username]["monthly_ampere"] = user_data[username].get("monthly_ampere", 0) + ampere_generated
-        user_data[username]["monthly_pressure"] = user_data[username].get("monthly_pressure", 0) + pressure_applied
-        user_data[username]["monthly_steps"] = user_data[username].get("monthly_steps", 0) + 1
-        user_data[username]["monthly_reward_points"] = user_data[username].get("monthly_reward_points", 0) + reward_points
-
-        user_data[username]["reward_points"] += reward_points
-        
-        save_user_data(user_data)
-        
-        # Save energy record (include exact_match flag)
-        energy_record = {
-            "timestamp": datetime.now().isoformat(),
-            "username": username,
-            "tile_id": tile_id,
-            "tile_name": tile_info["name"],
-            "location": {"lat": user_lat, "lon": user_lon},
-            "electricity_wh": round(base_power_wh, 4),
-            "voltage": round(voltage_generated, 2),
-            "ampere": round(ampere_generated, 2),
-            "pressure": round(pressure_applied, 2),
-            "exact_match": bool(exact_match),
-            "tile_lat": tile_info["lat"],
-            "tile_lon": tile_info["lon"]
-        }
-        save_energy_record(energy_record)
-        
-        return jsonify({
-            "status": "success",
-            "tile_name": tile_info["name"],
-            "tile_id": tile_id,
-            "electricity_wh": round(base_power_wh, 4),
-            "voltage": round(voltage_generated, 2),
-            "ampere": round(ampere_generated, 2),
-            "pressure": round(pressure_applied, 2),
-            "exact_match": bool(exact_match),
-            "reward_points": round(reward_points, 2),
-            "total_energy": round(user_data[username]["total_energy_wh"], 4),
-            "monthly_energy": round(user_data[username].get("monthly_energy_wh", 0), 4),
-            "monthly_voltage": round(user_data[username].get("monthly_voltage", 0), 2),
-            "monthly_ampere": round(user_data[username].get("monthly_ampere", 0), 2),
-            "monthly_pressure": round(user_data[username].get("monthly_pressure", 0), 2),
-            "total_voltage": round(user_data[username]["voltage"], 2),
-            "total_ampere": round(user_data[username]["ampere"], 2),
-            "total_pressure": round(user_data[username]["pressure_given"], 2)
-        })
-    
-    except Exception as e:
-        print(f"GPS Location Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-
-def get_nearby_tiles(user_lat, user_lon, radius_km=1):
-    """Get tiles within a certain radius of user location"""
-    energy_tiles = load_energy_tiles()
-    nearby = []
-    
-    for tile_id, tile_info in energy_tiles.items():
-        distance = calculate_distance(user_lat, user_lon, tile_info["lat"], tile_info["lon"])
-        if distance < radius_km:
-            nearby.append({
-                "id": tile_id,
-                "name": tile_info["name"],
-                "distance_km": round(distance, 3),
-                "lat": tile_info["lat"],
-                "lon": tile_info["lon"]
-            })
-    
-    return sorted(nearby, key=lambda x: x["distance_km"])
-
-
-@app.route("/dashboard")
-@login_required
-def dashboard_root():
-    # Redirect generic dashboard access to the logged-in user
-    username = session.get('username')
-    if not username:
-        return redirect('/')
-    return redirect(f"/dashboard/{username}")
-
-
 @app.route("/dashboard/<username>")
 @login_required
 def dashboard(username):
@@ -842,24 +634,7 @@ def dashboard(username):
     user_data = load_user_data()
     
     if username not in user_data:
-        # Initialize a fresh user data record if missing so dashboard can show
-        user_data[username] = {
-            "total_energy_wh": 0.0,
-            "reward_points": 0.0,
-            "tiles_visited": 0,
-            "total_steps": 0,
-            "pressure_given": 0.0,
-            "ampere": 0.0,
-            "voltage": 0.0,
-            "monthly_energy_wh": 0.0,
-            "monthly_voltage": 0.0,
-            "monthly_ampere": 0.0,
-            "monthly_pressure": 0.0,
-            "monthly_reward_points": 0.0,
-            "monthly_steps": 0,
-            "last_reset_month": datetime.now().strftime("%Y-%m")
-        }
-        save_user_data(user_data)
+        return render_template("home.html", error="User not found")
     
     user = user_data[username]
     tier = get_tier(user["reward_points"])
@@ -867,90 +642,17 @@ def dashboard(username):
     # Get recent energy records
     all_records = load_energy_records()
     user_records = [r for r in all_records if r["username"] == username][-5:]
-    # Calculate today's energy and today's reward points
-    today = datetime.now().date()
-    todays_records = [r for r in all_records if r["username"] == username and datetime.fromisoformat(r["timestamp"]).date() == today]
-    todays_energy = sum(r.get("electricity_wh", 0) for r in todays_records)
-    todays_reward_points = int(calculate_reward_points(todays_energy))
-    # ensure monthly statistics are up to date/reset
-    ensure_monthly_reset(user_data, username)
-    # save in case reset occurred
-    save_user_data(user_data)
-
-    # Determine user's last known location from most recent record (if any)
-    latest_user_record = None
-    for r in reversed(all_records):
-        if r.get("username") == username and r.get("location") and r["location"].get("lat") is not None:
-            latest_user_record = r
-            break
-
-    user_lat = None
-    user_lon = None
-    if latest_user_record:
-        try:
-            user_lat = float(latest_user_record["location"].get("lat"))
-            user_lon = float(latest_user_record["location"].get("lon"))
-        except Exception:
-            user_lat = None
-            user_lon = None
-
-    # Prepare tiles with distances (if user location available)
-    tiles_list = []
-    for tile_id, info in load_energy_tiles().items():
-        distance_km = None
-        if user_lat is not None and user_lon is not None:
-            try:
-                distance_km = round(calculate_distance(user_lat, user_lon, info["lat"], info["lon"]), 3)
-            except Exception:
-                distance_km = None
-        tiles_list.append({
-            "id": tile_id,
-            "name": info["name"],
-            "lat": info["lat"],
-            "lon": info["lon"],
-            "capacity": info.get("capacity", 0),
-            "distance_km": distance_km
-        })
-
-    # Active users and active tiles counts
-    active_users = load_active_users()
-    active_users_count = len(active_users)
-    active_tiles_count = len(tiles_list)
-
-    # Leaderboard (top 10)
-    all_user_data = load_user_data()
-    sorted_users = sorted(all_user_data.items(), key=lambda x: x[1]["reward_points"], reverse=True)[:10]
-    leaderboard = []
-    for rank, (uname, udata) in enumerate(sorted_users, 1):
-        leaderboard.append({
-            "rank": rank,
-            "username": uname,
-            "energy_wh": round(udata.get("total_energy_wh", 0), 2),
-            "points": int(udata.get("reward_points", 0)),
-            "tier": get_tier(udata.get("reward_points", 0))
-        })
-
+    
     return render_template("dashboard.html", 
         username=username,
         total_energy_wh=round(user["total_energy_wh"], 4),
-        todays_energy_wh=round(todays_energy,4),
-        todays_reward_points=todays_reward_points,
         reward_points=int(user["reward_points"]),
         pressure_given=user.get("pressure_given", 0),
         ampere=user.get("ampere", 0),
         voltage=user.get("voltage", 0),
         total_steps=user.get("total_steps", 0),
-        monthly_energy_wh=round(user.get("monthly_energy_wh", 0),4),
-        monthly_voltage=round(user.get("monthly_voltage", 0),2),
-        monthly_ampere=round(user.get("monthly_ampere", 0),2),
-        monthly_pressure=round(user.get("monthly_pressure", 0),2),
         tier=tier,
-        recent_records=user_records,
-        tiles=tiles_list,
-        user_location={"lat": user_lat, "lon": user_lon} if user_lat is not None else None,
-        active_users_count=active_users_count,
-        active_tiles_count=active_tiles_count,
-        leaderboard=leaderboard
+        recent_records=user_records
     )
 
 
@@ -982,7 +684,8 @@ def leaderboard():
 def energy_tiles():
     """View all available energy tile locations"""
     tiles_list = []
-    for tile_id, info in load_energy_tiles().items():
+    energy_tiles_data = load_energy_tiles()
+    for tile_id, info in energy_tiles_data.items():
         tiles_list.append({
             "id": tile_id,
             "name": info["name"],
@@ -999,48 +702,60 @@ def energy_tiles():
 def add_tile():
     """Admin route to add a new energy tile"""
     if request.method == "POST":
-        tile_name = request.form.get("tile_name")
-        latitude = float(request.form.get("latitude"))
-        longitude = float(request.form.get("longitude"))
-        radius = float(request.form.get("radius", 0.001))
-        capacity = int(request.form.get("capacity", 1000))
-        
-        if not tile_name or len(tile_name.strip()) == 0:
-            return jsonify({"status": "error", "message": "Tile name required"}), 400
-        
-        if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-            return jsonify({"status": "error", "message": "Invalid GPS coordinates"}), 400
-        
-        if capacity <= 0:
-            return jsonify({"status": "error", "message": "Capacity must be greater than 0"}), 400
-        
-        energy_tiles = load_energy_tiles()
-        
-        # Check for duplicate locations (within 0.0001 degrees)
-        for tile_id, tile in energy_tiles.items():
-            if abs(tile['lat'] - latitude) < 0.0001 and abs(tile['lon'] - longitude) < 0.0001:
-                return jsonify({"status": "error", "message": "A tile already exists at this location. The new tile was not added."}), 400
-        
-        # Generate new tile ID based on existing count
-        tile_num = len(energy_tiles) + 1
-        tile_id = f"tile_{str(tile_num).zfill(3)}"
-        
-        # Ensure ID doesn't already exist
-        while tile_id in energy_tiles:
-            tile_num += 1
+        try:
+            tile_name = request.form.get("tile_name")
+            latitude_str = request.form.get("latitude")
+            longitude_str = request.form.get("longitude")
+            radius_str = request.form.get("radius", "0.001")
+            capacity_str = request.form.get("capacity", "1000")
+            
+            if not tile_name or len(tile_name.strip()) == 0:
+                return jsonify({"status": "error", "message": "Tile name required"}), 400
+            
+            # Validate and convert coordinates
+            if not latitude_str or not longitude_str:
+                return jsonify({"status": "error", "message": "Latitude and Longitude are required"}), 400
+            
+            try:
+                latitude = float(latitude_str)
+                longitude = float(longitude_str)
+            except ValueError:
+                return jsonify({"status": "error", "message": "Latitude and Longitude must be numbers"}), 400
+            
+            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+                return jsonify({"status": "error", "message": "Invalid GPS coordinates"}), 400
+            
+            # Validate radius
+            try:
+                radius = float(radius_str)
+            except ValueError:
+                radius = 0.001
+            
+            # Validate capacity
+            try:
+                capacity = int(capacity_str)
+            except ValueError:
+                return jsonify({"status": "error", "message": "Capacity must be a whole number"}), 400
+            
+            if capacity <= 0:
+                return jsonify({"status": "error", "message": "Capacity must be greater than 0"}), 400
+            
+            energy_tiles = load_energy_tiles()
+            tile_num = len(energy_tiles) + 1
             tile_id = f"tile_{str(tile_num).zfill(3)}"
-        
-        energy_tiles[tile_id] = {
-            "name": tile_name,
-            "lat": latitude,
-            "lon": longitude,
-            "radius": radius,
-            "capacity": capacity,
-            "usage_count": 0
-        }
-        save_energy_tiles(energy_tiles)
-        
-        return jsonify({"status": "success", "message": "Tile added successfully"})
+            
+            energy_tiles[tile_id] = {
+                "name": tile_name,
+                "lat": latitude,
+                "lon": longitude,
+                "radius": radius,
+                "capacity": capacity
+            }
+            save_energy_tiles(energy_tiles)
+            
+            return jsonify({"status": "success", "message": "Tile added successfully"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error adding tile: {str(e)}"}), 500
     
     return render_template("add_tile.html")
 
@@ -1049,30 +764,19 @@ def add_tile():
 @admin_login_required
 def remove_tile(tile_id):
     """Admin route to remove an energy tile"""
-    energy_tiles = load_energy_tiles()
-    
-    if tile_id not in energy_tiles:
-        return jsonify({"status": "error", "message": "Tile not found"}), 404
-    
-    tile_name = energy_tiles[tile_id]["name"]
-    del energy_tiles[tile_id]
-    save_energy_tiles(energy_tiles)
-    
-    return jsonify({"status": "success", "message": "Tile removed"})
-
-
-@app.route("/api/tile-usage/<tile_id>", methods=["POST"])
-def increment_tile_usage(tile_id):
-    """API endpoint to increment tile usage count"""
-    energy_tiles = load_energy_tiles()
-    
-    if tile_id not in energy_tiles:
-        return jsonify({"status": "error", "message": "Tile not found"}), 404
-    
-    energy_tiles[tile_id]["usage_count"] = energy_tiles[tile_id].get("usage_count", 0) + 1
-    save_energy_tiles(energy_tiles)
-    
-    return jsonify({"status": "success", "message": "Usage count updated", "usage_count": energy_tiles[tile_id]["usage_count"]})
+    try:
+        energy_tiles = load_energy_tiles()
+        
+        if tile_id not in energy_tiles:
+            return jsonify({"status": "error", "message": "Tile not found"}), 404
+        
+        tile_name = energy_tiles[tile_id]["name"]
+        del energy_tiles[tile_id]
+        save_energy_tiles(energy_tiles)
+        
+        return jsonify({"status": "success", "message": f"Tile '{tile_name}' removed successfully"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error removing tile: {str(e)}"}), 500
 
 
 @app.route("/api/user-info")
@@ -1104,5 +808,337 @@ def get_tiles():
     
     return jsonify(tiles_list)
 
+
+@app.route("/add-energy", methods=["POST"])
+def add_energy():
+    """IoT endpoint to submit sensor energy data and configuration"""
+    try:
+        data = request.get_json()
+        
+        username = data.get("username")
+        tile_id = data.get("selectedTile")
+        electricity_wh = float(data.get("electricity", 0))
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+        
+        if not username or not tile_id:
+            return jsonify({"success": False, "message": "Missing username or tile"}), 400
+        
+        # Load and verify tile exists
+        energy_tiles = load_energy_tiles()
+        if tile_id not in energy_tiles:
+            return jsonify({"success": False, "message": "Invalid tile"}), 400
+        
+        tile_info = energy_tiles[tile_id]
+        
+        # Record sensor data
+        energy_record = {
+            "timestamp": datetime.now().isoformat(),
+            "username": username,
+            "tile_id": tile_id,
+            "tile_name": tile_info["name"],
+            "location": {"lat": latitude, "lon": longitude} if latitude and longitude else {},
+            "electricity_wh": round(electricity_wh, 4),
+            "tile_lat": tile_info["lat"],
+            "tile_lon": tile_info["lon"]
+        }
+        save_energy_record(energy_record)
+        
+        # Update user account
+        user_data = load_user_data()
+        if username not in user_data:
+            user_data[username] = {
+                "total_energy_wh": 0,
+                "reward_points": 0,
+                "pressure_given": 0,
+                "ampere": 0,
+                "voltage": 0,
+                "total_steps": 0
+            }
+        
+        reward_points = calculate_reward_points(electricity_wh)
+        user_data[username]["total_energy_wh"] += electricity_wh
+        user_data[username]["reward_points"] += reward_points
+        user_data[username]["tiles_visited"] = user_data[username].get("tiles_visited", 0) + 1
+        
+        save_user_data(user_data)
+        
+        return jsonify({
+            "success": True,
+            "message": "Thank you for your cooperation!",
+            "electricity_wh": round(electricity_wh, 4),
+            "reward_points": int(reward_points),
+            "tile_name": tile_info["name"],
+            "username": username
+        })
+    except Exception as e:
+        print(f"Add Energy Error: {e}")
+        return jsonify({"success": False, "message": str(e)}), 400
+
+
+# ============= LOCATION MANAGEMENT ROUTES =============
+@app.route("/api/get-users")
+@admin_login_required
+def get_users():
+    """Get all registered users for admin"""
+    try:
+        users = load_users()
+        users_list = []
+        for username in users:
+            user_data = load_user_data()
+            user_info = user_data.get(username, {})
+            users_list.append({
+                "username": username,
+                "assigned_location": user_info.get("assigned_location"),
+                "email": users[username].get("email", "")
+            })
+        return jsonify(sorted(users_list, key=lambda x: x["username"]))
+    except Exception as e:
+        print(f"Get Users Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/assign-location", methods=["POST"])
+@admin_login_required
+def assign_location():
+    """Admin assigns a location to a user"""
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        tile_id = data.get("tile_id")
+        
+        if not username or not tile_id:
+            return jsonify({"status": "error", "message": "Username and tile_id required"}), 400
+        
+        # Verify user exists
+        users = load_users()
+        if username not in users:
+            return jsonify({"status": "error", "message": "User not found"}), 400
+        
+        # Verify tile exists
+        energy_tiles = load_energy_tiles()
+        if tile_id not in energy_tiles:
+            return jsonify({"status": "error", "message": "Location not found"}), 400
+        
+        # Update user's assigned location
+        user_data = load_user_data()
+        if username not in user_data:
+            user_data[username] = {
+                "total_energy_wh": 0,
+                "reward_points": 0,
+                "pressure_given": 0,
+                "ampere": 0,
+                "voltage": 0,
+                "tiles_visited": 0,
+                "total_steps": 0
+            }
+        
+        user_data[username]["assigned_location"] = tile_id
+        save_user_data(user_data)
+        
+        tile_info = energy_tiles[tile_id]
+        return jsonify({
+            "status": "success",
+            "message": f"Location '{tile_info['name']}' assigned to user '{username}'",
+            "username": username,
+            "tile_id": tile_id,
+            "tile_name": tile_info["name"]
+        })
+    except Exception as e:
+        print(f"Assign Location Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/api/user-location/<username>")
+@login_required
+def get_user_location(username):
+    """Get user's assigned location"""
+    try:
+        # Only allow users to see their own location or admins to see anyone's
+        if session.get('user_type') == 'user' and session.get('username') != username:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        user_data = load_user_data()
+        if username not in user_data:
+            return jsonify({"assigned_location": None}), 200
+        
+        assigned_location = user_data[username].get("assigned_location")
+        
+        if assigned_location:
+            energy_tiles = load_energy_tiles()
+            if assigned_location in energy_tiles:
+                tile = energy_tiles[assigned_location]
+                return jsonify({
+                    "assigned_location": assigned_location,
+                    "tile_name": tile["name"],
+                    "tile_lat": tile["lat"],
+                    "tile_lon": tile["lon"],
+                    "tile_capacity": tile["capacity"]
+                })
+        
+        return jsonify({"assigned_location": None}), 200
+    except Exception as e:
+        print(f"Get User Location Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/set-user-location", methods=["POST"])
+@login_required
+def set_user_location():
+    """Allow user to set/change their own location"""
+    try:
+        data = request.get_json()
+        username = session.get('username')
+        tile_id = data.get("tile_id")
+        
+        if not tile_id:
+            return jsonify({"status": "error", "message": "tile_id required"}), 400
+        
+        # Verify tile exists
+        energy_tiles = load_energy_tiles()
+        if tile_id not in energy_tiles:
+            return jsonify({"status": "error", "message": "Location not found"}), 400
+        
+        # Update user's assigned location
+        user_data = load_user_data()
+        if username not in user_data:
+            user_data[username] = {
+                "total_energy_wh": 0,
+                "reward_points": 0,
+                "pressure_given": 0,
+                "ampere": 0,
+                "voltage": 0,
+                "tiles_visited": 0,
+                "total_steps": 0
+            }
+        
+        user_data[username]["assigned_location"] = tile_id
+        save_user_data(user_data)
+        
+        tile_info = energy_tiles[tile_id]
+        return jsonify({
+            "status": "success",
+            "message": f"Your location is now set to {tile_info['name']}",
+            "tile_id": tile_id,
+            "tile_name": tile_info["name"]
+        })
+    except Exception as e:
+        print(f"Set User Location Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/api/submit-sensor-data", methods=["POST"])
+def submit_sensor_data():
+    """Hardware sensor endpoint - submits location & energy data
+    Hardware sends: username, latitude, longitude, electricity_wh, total_steps
+    System checks if location matches assigned tile and returns stats
+    """
+    try:
+        data = request.get_json()
+        
+        username = data.get("username")
+        hardware_lat = float(data.get("latitude", 0))
+        hardware_lon = float(data.get("longitude", 0))
+        electricity_wh = float(data.get("electricity_wh", 0))
+        total_steps = int(data.get("total_steps", 0))
+        
+        if not username:
+            return jsonify({"status": "error", "message": "Username required"}), 400
+        
+        # Get user's assigned location
+        user_data = load_user_data()
+        if username not in user_data:
+            user_data[username] = {
+                "total_energy_wh": 0,
+                "reward_points": 0,
+                "pressure_given": 0,
+                "ampere": 0,
+                "voltage": 0,
+                "tiles_visited": 0,
+                "total_steps": 0,
+                "assigned_location": None
+            }
+        
+        assigned_location = user_data[username].get("assigned_location")
+        location_match = False
+        tile_info = None
+        matched_tile_id = None
+        
+        # Check if location matches assigned tile
+        if assigned_location:
+            energy_tiles = load_energy_tiles()
+            if assigned_location in energy_tiles:
+                tile_info = energy_tiles[assigned_location]
+                # Check if hardware location is within tile radius
+                distance = calculate_distance(hardware_lat, hardware_lon, tile_info["lat"], tile_info["lon"])
+                if distance < (tile_info["radius"] * 111):  # 1 degree ≈ 111 km
+                    location_match = True
+                    matched_tile_id = assigned_location
+        
+        # Only record energy if location matches
+        if location_match and electricity_wh > 0:
+            # Record sensor data
+            energy_record = {
+                "timestamp": datetime.now().isoformat(),
+                "username": username,
+                "tile_id": matched_tile_id,
+                "tile_name": tile_info["name"],
+                "location": {"lat": hardware_lat, "lon": hardware_lon},
+                "electricity_wh": round(electricity_wh, 4),
+                "tile_lat": tile_info["lat"],
+                "tile_lon": tile_info["lon"]
+            }
+            save_energy_record(energy_record)
+            
+            # Update user stats
+            reward_points = calculate_reward_points(electricity_wh)
+            user_data[username]["total_energy_wh"] += electricity_wh
+            user_data[username]["reward_points"] += reward_points
+            user_data[username]["total_steps"] = total_steps  # Update step count
+            
+            save_user_data(user_data)
+            
+            return jsonify({
+                "status": "success",
+                "location_match": True,
+                "message": "Energy recorded successfully!",
+                "tile_name": tile_info["name"],
+                "electricity_wh": round(electricity_wh, 4),
+                "reward_points": int(reward_points),
+                "total_steps": total_steps,
+                "total_energy_wh": round(user_data[username]["total_energy_wh"], 4),
+                "total_reward_points": int(user_data[username]["reward_points"])
+            })
+        else:
+            # Update steps even if no energy or location mismatch
+            if total_steps > 0:
+                user_data[username]["total_steps"] = total_steps
+                save_user_data(user_data)
+            
+            if not location_match:
+                return jsonify({
+                    "status": "warning",
+                    "location_match": False,
+                    "message": "Location does not match assigned tile. No energy recorded.",
+                    "assigned_location": tile_info["name"] if tile_info else "Not assigned",
+                    "total_steps": total_steps,
+                    "electricity_wh": 0,
+                    "reward_points": 0
+                })
+            else:
+                return jsonify({
+                    "status": "success",
+                    "location_match": True if location_match else False,
+                    "message": "Data received",
+                    "electricity_wh": 0,
+                    "total_steps": total_steps
+                })
+    except Exception as e:
+        print(f"Submit Sensor Data Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0')
+
+
+
